@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\openssl.1.0.1.21\build\native\openssl.props" Condition="Exists('..\packages\openssl.1.0.1.21\build\native\openssl.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -17,6 +16,7 @@
     <ProjectGuid>{fa728831-7de2-4c53-b7d6-72397576c421}</ProjectGuid>
     <RootNamespace>SnapmakerLightburnHost</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SnapmakerLightBurnHost</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -53,6 +53,9 @@
     <CustomBuildAfterTargets>
     </CustomBuildAfterTargets>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Linkage-curl>static</Linkage-curl>
@@ -60,6 +63,9 @@
     <Linkage-zlib>static</Linkage-zlib>
     <Linkage-libssh2>static</Linkage-libssh2>
     <CopyLocalDeploymentContent>true</CopyLocalDeploymentContent>
+    <ExternalIncludePath>$(ExternalIncludePath)</ExternalIncludePath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -69,21 +75,24 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;CURL_STATICLIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\3rdParty\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\3rdParty\lib;..\packages\curl.7.30.0.2\build\native\lib\v110\x64\Release\dynamic;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\third_party\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>softcam.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
       <Command>
       </Command>
     </CustomBuildStep>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(IntDir)/$(ProjectName).res</ResourceOutputFileName>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -93,7 +102,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;CURL_STATICLIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\3rdParty\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\third_party\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>true</SupportJustMyCode>
       <Optimization>Disabled</Optimization>
@@ -103,62 +112,66 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\3rdParty\lib;..\packages\curl.7.30.0.2\build\native\lib\v110\x64\Release\dynamic;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\third_party\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>softcam.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ResourceCompile>
+      <ResourceOutputFileName>$(IntDir)/$(ProjectName).res</ResourceOutputFileName>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SnapmakerLightburnHost.cpp" />
+    <ClCompile Include="lightburn_utils.cpp" />
+    <ClCompile Include="kasa_controller.cpp" />
+    <ClCompile Include="config_manager.cpp" />
+    <ClCompile Include="host_context.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="network_client.cpp" />
+    <ClCompile Include="camera_capture.cpp" />
+    <ClCompile Include="image_processing.cpp" />
+    <ClCompile Include="gcode_handler.cpp" />
+    <ClCompile Include="notification_service.cpp" />
+    <ClCompile Include="console_ui.cpp" />
+    <ClCompile Include="camera_ui.cpp" />
+    <ClCompile Include="config_ui.cpp" />
+    <ClCompile Include="display_about.cpp" />
+    <ClCompile Include="file_utils.cpp" />
+    <ClCompile Include="process_handlers.cpp" />
+    <ClCompile Include="module_utils.cpp" />
+    <ClCompile Include="input_utils.cpp" />
+    <ClCompile Include="print_monitor.cpp" />
+    <ClCompile Include="connection_setup.cpp" />
+    <ClCompile Include="shortcuts.cpp" />
+    <ClCompile Include="machine_api.cpp" />
+    <ClCompile Include="upload_pages.cpp" />
+    <ClCompile Include="upload_post.cpp" />
+    <ClCompile Include="upload_get.cpp" />
+    <ClCompile Include="tray.cpp" />
+    <ClCompile Include="upload_server.cpp" />
+    <ClCompile Include="string_utils.cpp" />
+    <ClCompile Include="status_page.cpp" />
+    <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\3rdParty\include\softcam.h" />
-    <ClInclude Include="..\3rdParty\include\stb_image.h" />
+    <ClInclude Include="..\third_party\include\softcam.h" />
+    <ClInclude Include="..\third_party\include\stb_image.h" />
+    <ClInclude Include="..\third_party\include\stb_image_resize.h" />
+    <ClInclude Include="upload_server.h" />
+    <ClInclude Include="upload_server.hpp" />
+    <ClInclude Include="host.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\3rdParty\lib\softcam.dll">
+    <None Include="..\third_party\lib\softcam.dll">
       <DeploymentContent>true</DeploymentContent>
     </None>
-    <None Include="..\packages\curl.redist.7.30.0.2\build\native\bin\v110\x64\Release\dynamic\libcurl.dll">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\packages\libssh2.redist.1.4.3.1\build\native\bin\v110\x64\Release\dynamic\cdecl\libssh2.dll">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\packages\openssl.redist.1.0.1.21\build\native\bin\v110\x64\Release\dynamic\cdecl\libeay32.dll">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\packages\openssl.redist.1.0.1.21\build\native\bin\v110\x64\Release\dynamic\cdecl\ssleay32.dll">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="..\packages\zlib.redist.1.2.8.1\build\native\bin\v110\x64\Release\dynamic\cdecl\zlib.dll">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
-    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="SnapmakerLightBurnHost.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SnapmakerLightBurnHost.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\curl.redist.7.30.0.2\build\native\curl.redist.targets" Condition="Exists('..\packages\curl.redist.7.30.0.2\build\native\curl.redist.targets')" />
-    <Import Project="..\packages\libssh2.redist.1.4.3.1\build\native\libssh2.redist.targets" Condition="Exists('..\packages\libssh2.redist.1.4.3.1\build\native\libssh2.redist.targets')" />
-    <Import Project="..\packages\openssl.redist.1.0.1.21\build\native\openssl.redist.targets" Condition="Exists('..\packages\openssl.redist.1.0.1.21\build\native\openssl.redist.targets')" />
-    <Import Project="..\packages\zlib.redist.1.2.8.1\build\native\zlib.redist.targets" Condition="Exists('..\packages\zlib.redist.1.2.8.1\build\native\zlib.redist.targets')" />
-    <Import Project="..\packages\zlib.1.2.8.1\build\native\zlib.targets" Condition="Exists('..\packages\zlib.1.2.8.1\build\native\zlib.targets')" />
-    <Import Project="..\packages\openssl.1.0.1.21\build\native\openssl.targets" Condition="Exists('..\packages\openssl.1.0.1.21\build\native\openssl.targets')" />
-    <Import Project="..\packages\libssh2.1.4.3.1\build\native\libssh2.targets" Condition="Exists('..\packages\libssh2.1.4.3.1\build\native\libssh2.targets')" />
-    <Import Project="..\packages\curl.7.30.0.2\build\native\curl.targets" Condition="Exists('..\packages\curl.7.30.0.2\build\native\curl.targets')" />
-  </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\curl.redist.7.30.0.2\build\native\curl.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\curl.redist.7.30.0.2\build\native\curl.redist.targets'))" />
-    <Error Condition="!Exists('..\packages\libssh2.redist.1.4.3.1\build\native\libssh2.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\libssh2.redist.1.4.3.1\build\native\libssh2.redist.targets'))" />
-    <Error Condition="!Exists('..\packages\openssl.redist.1.0.1.21\build\native\openssl.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl.redist.1.0.1.21\build\native\openssl.redist.targets'))" />
-    <Error Condition="!Exists('..\packages\zlib.redist.1.2.8.1\build\native\zlib.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\zlib.redist.1.2.8.1\build\native\zlib.redist.targets'))" />
-    <Error Condition="!Exists('..\packages\zlib.1.2.8.1\build\native\zlib.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\zlib.1.2.8.1\build\native\zlib.targets'))" />
-    <Error Condition="!Exists('..\packages\openssl.1.0.1.21\build\native\openssl.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl.1.0.1.21\build\native\openssl.props'))" />
-    <Error Condition="!Exists('..\packages\openssl.1.0.1.21\build\native\openssl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\openssl.1.0.1.21\build\native\openssl.targets'))" />
-    <Error Condition="!Exists('..\packages\libssh2.1.4.3.1\build\native\libssh2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\libssh2.1.4.3.1\build\native\libssh2.targets'))" />
-    <Error Condition="!Exists('..\packages\curl.7.30.0.2\build\native\curl.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\curl.7.30.0.2\build\native\curl.targets'))" />
-  </Target>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
