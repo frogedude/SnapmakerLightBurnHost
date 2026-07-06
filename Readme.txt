@@ -168,10 +168,9 @@ Auto-Monitor Print Toggle
 - At print start, press SHIFT within 3 seconds to override the current setting
 
 HTTP Upload Server (OctoPrint-like API)
-- Start with: /server (minimizes console, runs in background)
+- Start with: /tray or /server (minimizes console, runs in background)
 - Accepts multipart POST to /api/files/local with "file" and "print" fields
 - "print=true" starts the job, "print=false" only uploads
-- Uploaded files are renamed with a "snapmaker_" prefix (e.g., snapmaker_model.gcode)
 - Serves simple status page on http://localhost:8081
 - Also serves user-friendly web pages:
   /upload      - drag & drop file upload with print option
