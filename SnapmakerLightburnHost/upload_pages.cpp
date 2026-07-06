@@ -3343,3 +3343,443 @@ void ServeMobilePage(SOCKET clientSocket) {
 
     SendHttpResponse(clientSocket, 200, "text/html", html);
 }
+
+void ServeDiscoverPage(SOCKET clientSocket) {
+    std::string html = R"html(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapmaker Network Scanner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #eef2f7 0%, #d9e2ec 100%);
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .card {
+            max-width: 750px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .header {
+            background: #0a1c2f;
+            padding: 1.2rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 3px solid #3498db;
+        }
+        .logo { width: 50px; height: 50px; }
+        .logo svg { width: 100%; height: 100%; }
+        .title h1 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .title p {
+            color: #8aa9c9;
+            font-size: 0.75rem;
+        }
+        .content {
+            padding: 1.8rem;
+        }
+        .subtitle {
+            color: #1e4663;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e2edf4;
+            padding-bottom: 0.8rem;
+        }
+        .scan-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: center;
+        }
+        .scan-btn:hover { background: #2ea043; }
+        .scan-btn:disabled {
+            background: #6c7a89;
+            cursor: not-allowed;
+        }
+        .scan-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        .scan-btn.loading .spinner { display: inline-block; }
+        .scan-btn.loading .btn-text { opacity: 0.7; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #statusBox {
+            margin-top: 1.5rem;
+            padding: 1rem 1.2rem;
+            border-radius: 1rem;
+            background: #f8fafc;
+            border-left: 4px solid #8b949e;
+            display: none;
+            font-size: 0.95rem;
+        }
+        #statusBox.visible { display: block; }
+        #statusBox.idle { border-left-color: #8b949e; }
+        #statusBox.scanning { border-left-color: #d29922; }
+        #statusBox.success { border-left-color: #2ecc71; }
+        #statusBox.error { border-left-color: #e74c3c; }
+
+        .results-area {
+            margin-top: 1.5rem;
+            display: none;
+        }
+        .results-area.visible { display: block; }
+
+        .device-card {
+            background: #f8fafc;
+            border: 1px solid #e2edf4;
+            border-radius: 1rem;
+            padding: 1rem 1.2rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.2s;
+        }
+        .device-card:hover { border-color: #3498db; }
+        .device-info {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.6rem 1.2rem;
+        }
+        .device-ip {
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0a1c2f;
+        }
+        .device-model {
+            background: #e2edf4;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #1e4663;
+        }
+        .device-status {
+            font-weight: 600;
+            font-size: 0.8rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-idle { background: #d4edda; color: #155724; }
+        .status-running { background: #fff3cd; color: #856404; }
+        .status-paused { background: #d1ecf1; color: #0c5460; }
+        .status-offline { background: #f8d7da; color: #721c24; }
+        .status-unknown { background: #e2e8f0; color: #2d3748; }
+
+        .device-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-copy {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-copy:hover { background: #2980b9; }
+        .btn-copy:active { transform: scale(0.96); }
+        .btn-copy.copied {
+            background: #2ecc71;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #2ecc71;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.error {
+            background: #e74c3c;
+        }
+
+        .footer-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.2rem;
+        }
+        .footer-actions a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .footer-actions a:hover { text-decoration: underline; }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6c7a89;
+        }
+        .empty-state .big-icon { font-size: 3rem; margin-bottom: 0.5rem; display: block; }
+        .hint {
+            font-size: 0.85rem;
+            color: #6c7a89;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 550px) {
+            .header { flex-direction: column; text-align: center; }
+            .content { padding: 1rem; }
+            .device-card { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+            .device-actions { justify-content: flex-end; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header">
+        <div class="logo">
+            <!-- === FINAL SVG (your provided code) === -->
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <!-- Magnifying glass lens (dark blue) -->
+                <circle cx="48" cy="44" r="26" fill="#0a1c2f"/>
+                <!-- Lighter blue ring inside the lens -->
+                <circle cx="48" cy="44" r="20" fill="none" stroke="#2980B9" stroke-width="9.5" opacity="1.0"/>
+                <!-- White S in the centre -->
+                <text x="48" y="55" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="bold" fill="#ffffff" text-anchor="middle">S</text>
+                <!-- Rectangular handle (lighter blue) -->
+                <rect x="43" y="65" width="10" height="25" rx="3" fill="#2980B9"/>
+                <!-- Network nodes -->
+                <circle cx="30" cy="32" r="3.5" fill="#2ecc71"/>   <!-- Green -->
+                <circle cx="66" cy="32" r="3.5" fill="#e74c3c"/>   <!-- Red -->
+                <circle cx="48" cy="67" r="3.5" fill="#f1c40f"/>   <!-- Amber -->
+                <!-- Triangle lines (white, subtle) -->
+                <line x1="30" y1="32" x2="66" y2="32" stroke="#ffffff" stroke-width="1.5" opacity="0.6"/>
+                <line x1="66" y1="32" x2="48" y2="67" stroke="#ffffff" stroke-width="1.5" opacity="0.6"/>
+                <line x1="48" y1="67" x2="30" y2="32" stroke="#ffffff" stroke-width="1.5" opacity="0.6"/>
+            </svg>
+        </div>
+        <div class="title">
+            <h1>Snapmaker Network Scanner</h1>
+            <p>UDP Discovery on port 20054</p>
+        </div>
+    </div>
+    <div class="content">
+        <div class="subtitle">Find all Snapmaker 2.0 devices on your local network</div>
+
+        <button id="scanBtn" class="scan-btn" onclick="startScan()">
+            <span class="spinner"></span>
+            <span class="btn-text">Scan Network</span>
+        </button>
+
+        <div id="statusBox" class="idle">
+            <span id="statusMessage">Ready to scan. Make sure your printer is powered on.</span>
+        </div>
+
+        <div id="resultsArea" class="results-area">
+            <div id="deviceList"></div>
+        </div>
+
+        <div class="footer-actions">
+            <!-- Only "Go to Config" remains; "Home" link removed -->
+            <a href="/config">Go to Config</a>
+            <span style="flex:1;"></span>
+            <span style="color:#6c7a89; font-size:0.8rem;">Broadcasts to 255.255.255.255:20054</span>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast">IP copied!</div>
+
+<script>
+    var scanBtn = document.getElementById('scanBtn');
+    var statusBox = document.getElementById('statusBox');
+    var statusMsg = document.getElementById('statusMessage');
+    var resultsArea = document.getElementById('resultsArea');
+    var deviceList = document.getElementById('deviceList');
+
+    function setStatus(message, type) {
+        type = type || 'idle';
+        statusBox.className = 'visible ' + type;
+        statusMsg.textContent = message;
+    }
+
+    function showToast(message, isError) {
+        var toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast' + (isError ? ' error' : '');
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(function() { toast.classList.remove('show'); }, 3000);
+    }
+
+    function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(function() {
+                    showToast('Copied: ' + text);
+                })
+                .catch(function(err) {
+                    fallbackCopy(text);
+                });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showToast('Copied: ' + text);
+        } catch (err) {
+            showToast('Failed to copy. Select the IP manually.', true);
+        }
+        document.body.removeChild(textarea);
+    }
+
+    function renderDevices(devices) {
+        deviceList.innerHTML = '';
+        resultsArea.classList.add('visible');
+
+        if (devices.length === 0) {
+            deviceList.innerHTML = 
+                '<div class="empty-state">' +
+                '<span class="big-icon">[-]</span>' +
+                '<strong>No devices found</strong>' +
+                '<p class="hint">Ensure your Snapmaker is powered on and connected to the same network.<br>' +
+                'Try disabling your firewall temporarily for UDP port 20054.</p>' +
+                '</div>';
+            return;
+        }
+
+        for (var i = 0; i < devices.length; i++) {
+            var dev = devices[i];
+            var statusClass = 'status-unknown';
+            var st = dev.status.toLowerCase();
+            if (st === 'idle') statusClass = 'status-idle';
+            else if (st === 'running') statusClass = 'status-running';
+            else if (st === 'paused') statusClass = 'status-paused';
+            else if (st === 'offline') statusClass = 'status-offline';
+
+            var card = document.createElement('div');
+            card.className = 'device-card';
+            card.innerHTML = 
+                '<div class="device-info">' +
+                '<span class="device-ip">' + dev.ip + '</span>' +
+                '<span class="device-model">' + dev.model + '</span>' +
+                '<span class="device-status ' + statusClass + '">' + dev.status + '</span>' +
+                '</div>' +
+                '<div class="device-actions">' +
+                '<button class="btn-copy" data-ip="' + dev.ip + '" onclick="copyIP(this)">Copy IP</button>' +
+                '</div>';
+            deviceList.appendChild(card);
+        }
+    }
+
+    function copyIP(btn) {
+        var ip = btn.getAttribute('data-ip');
+        copyToClipboard(ip);
+        var originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() {
+            btn.textContent = originalText;
+            btn.classList.remove('copied');
+        }, 2000);
+    }
+
+    function startScan() {
+        scanBtn.disabled = true;
+        scanBtn.classList.add('loading');
+        setStatus('Scanning network for Snapmaker devices... (takes ~2-3 seconds)', 'scanning');
+        resultsArea.classList.remove('visible');
+        deviceList.innerHTML = '';
+
+        fetch('/api/discover')
+            .then(function(response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function(devices) {
+                if (!Array.isArray(devices)) {
+                    devices = devices.ip ? [devices] : [];
+                }
+                if (devices.length === 0) {
+                    setStatus('No Snapmaker found on the network.', 'error');
+                } else {
+                    setStatus('Found ' + devices.length + ' device(s).', 'success');
+                }
+                renderDevices(devices);
+            })
+            .catch(function(err) {
+                setStatus('Error: ' + err.message + '. Is the server running?', 'error');
+                resultsArea.classList.add('visible');
+                deviceList.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<span class="big-icon">[X]</span>' +
+                    '<strong>API Error</strong>' +
+                    '<p class="hint">Failed to reach the backend discovery service.<br>' +
+                    'Make sure you are connected to localhost:8081.</p>' +
+                    '</div>';
+            })
+            .finally(function() {
+                scanBtn.disabled = false;
+                scanBtn.classList.remove('loading');
+            });
+    }
+</script>
+</body>
+</html>
+)html";
+    SendHttpResponse(clientSocket, 200, "text/html", html);
+}

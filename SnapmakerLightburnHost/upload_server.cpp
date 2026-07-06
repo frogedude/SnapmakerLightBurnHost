@@ -3,6 +3,121 @@
 #include "host.h"
 #include "upload_server.hpp"
 
+// ----------------------------------------------------------------------------
+// UDP Discovery for Snapmaker 2.0
+// Returns devices found on the local network.
+// ----------------------------------------------------------------------------
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <thread>
+#include <chrono>
+#include <set>
+#pragma comment(lib, "Ws2_32.lib")
+
+struct SnapmakerDevice {
+    std::string ip;
+    std::string model;
+    std::string status;
+};
+
+std::vector<SnapmakerDevice> discoverSnapmakers(int timeoutMs = 1500, int maxRetries = 2) {
+    std::vector<SnapmakerDevice> foundDevices;
+    std::set<std::string> uniqueIPs;
+
+    for (int attempt = 0; attempt < maxRetries; ++attempt) {
+        SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock == INVALID_SOCKET) {
+            break;
+        }
+
+        // Enable broadcast
+        int broadcast = 1;
+        setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+
+        // Set receive timeout
+        DWORD timeout = timeoutMs;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+
+        sockaddr_in dest;
+        dest.sin_family = AF_INET;
+        dest.sin_port = htons(20054);          // Snapmaker UDP port
+        InetPton(AF_INET, L"255.255.255.255", &dest.sin_addr);
+
+        const char* probe = "discover";
+        sendto(sock, probe, (int)strlen(probe), 0, (sockaddr*)&dest, sizeof(dest));
+
+        char buffer[1024] = { 0 };
+        sockaddr_in from;
+        int fromLen = sizeof(from);
+
+        // Collect all replies within the timeout window
+        while (true) {
+            int received = recvfrom(sock, buffer, 1024, 0, (sockaddr*)&from, &fromLen);
+            if (received <= 0) break;
+
+            std::string reply(buffer, received);
+
+            // Expected format: "Snapmaker@192.168.1.100|model:Snapmaker 2 Model A350|status:IDLE"
+            std::vector<std::string> parts;
+            std::stringstream ss(reply);
+            std::string item;
+            while (std::getline(ss, item, '|')) {
+                parts.push_back(item);
+            }
+
+            if (parts.size() >= 3) {
+                SnapmakerDevice dev;
+                dev.ip = "N/A";
+                dev.model = "N/A";
+                dev.status = "OFFLINE";
+
+                size_t atPos = parts[0].find('@');
+                if (atPos != std::string::npos)
+                    dev.ip = parts[0].substr(atPos + 1);
+
+                size_t colPos1 = parts[1].find(':');
+                if (colPos1 != std::string::npos)
+                    dev.model = parts[1].substr(colPos1 + 1);
+
+                size_t colPos2 = parts[2].find(':');
+                if (colPos2 != std::string::npos)
+                    dev.status = parts[2].substr(colPos2 + 1);
+
+                // Strip any trailing CR/LF
+                dev.status.erase(std::remove(dev.status.begin(), dev.status.end(), '\r'), dev.status.end());
+                dev.status.erase(std::remove(dev.status.begin(), dev.status.end(), '\n'), dev.status.end());
+
+                if (uniqueIPs.find(dev.ip) == uniqueIPs.end()) {
+                    uniqueIPs.insert(dev.ip);
+                    foundDevices.push_back(dev);
+                }
+            }
+        }
+        closesocket(sock);
+
+        if (!foundDevices.empty()) break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    }
+    return foundDevices;
+}
+
+void ServeDiscoverAPI(SOCKET clientSocket) {
+    auto devices = discoverSnapmakers(1500, 2);
+
+    std::string json = "[";
+    for (size_t i = 0; i < devices.size(); ++i) {
+        if (i > 0) json += ",";
+        json += "{";
+        json += "\"ip\":\"" + devices[i].ip + "\",";
+        json += "\"model\":\"" + devices[i].model + "\",";
+        json += "\"status\":\"" + devices[i].status + "\"";
+        json += "}";
+    }
+    json += "]";
+
+    SendHttpResponse(clientSocket, 200, "application/json", json);
+}
+
 static const std::string base64_chars =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 "abcdefghijklmnopqrstuvwxyz"

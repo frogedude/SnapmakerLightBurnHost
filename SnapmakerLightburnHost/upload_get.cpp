@@ -627,6 +627,12 @@ void HandleGetRequest(SOCKET clientSocket, const std::string& path, const std::s
         ServeMobilePage(clientSocket);
         return;
     }
+    else if (path == "/discover") {
+        ServeDiscoverPage(clientSocket);
+    }
+    else if (path == "/api/discover") {
+        ServeDiscoverAPI(clientSocket);
+    }
     else if (path == "/favicon.ico") {
         SendSimpleResponse(clientSocket, 404, "Not Found");
         return;

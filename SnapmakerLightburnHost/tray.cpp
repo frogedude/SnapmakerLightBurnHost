@@ -54,12 +54,13 @@ bool MoveToRecycleBin(const std::string& filePath) {
 #define ID_TRAY_WEB_CAPTURE        1016
 #define ID_TRAY_WEB_CONFIG         1017
 #define ID_TRAY_WEB_CONTROL        1018
-#define ID_TRAY_WEB_GCODE          1019
-#define ID_TRAY_WEB_MONITOR        1020
-#define ID_TRAY_WEB_THICKNESS      1021
-#define ID_TRAY_WEB_UPLOAD         1022
-#define ID_TRAY_WEB_XYZCAL         1023
-#define ID_TRAY_WEB_ABOUT          1024
+#define ID_TRAY_WEB_DISCOVER       1019
+#define ID_TRAY_WEB_GCODE          1020
+#define ID_TRAY_WEB_MONITOR        1021
+#define ID_TRAY_WEB_THICKNESS      1022
+#define ID_TRAY_WEB_UPLOAD         1023
+#define ID_TRAY_WEB_XYZCAL         1024
+#define ID_TRAY_WEB_ABOUT          1025
 
 static NOTIFYICONDATAW nid = {};
 static HWND hMsgWnd = NULL;
@@ -938,6 +939,7 @@ static LRESULT CALLBACK MsgWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_CAPTURE, L"Web Capture");
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_CONFIG, L"Web Configuration");
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_CONTROL, L"Web Control");
+            AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_DISCOVER, L"Web Network Scanner");
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_GCODE, L"Web G-code Console");
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_MONITOR, L"Web Monitor");
             AppendMenuW(hMenu, MF_STRING, ID_TRAY_WEB_THICKNESS, L"Web Thickness");
@@ -1099,6 +1101,9 @@ static LRESULT CALLBACK MsgWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             break;
         case ID_TRAY_WEB_CONTROL:
             ShellExecuteW(NULL, L"open", L"http://localhost:8081/control", NULL, NULL, SW_SHOWNORMAL);
+            break;
+        case ID_TRAY_WEB_DISCOVER:
+            ShellExecuteW(NULL, L"open", L"http://localhost:8081/discover", NULL, NULL, SW_SHOWNORMAL);
             break;
         case ID_TRAY_WEB_GCODE:
             ShellExecuteW(NULL, L"open", L"http://localhost:8081/gcode", NULL, NULL, SW_SHOWNORMAL);

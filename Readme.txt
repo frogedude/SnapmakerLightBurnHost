@@ -101,6 +101,13 @@ File Action (Recycle Bin vs Permanent Delete)
   * ProcessFileUpload (temp files and source files)
 - Default is Recycle Bin for safety
 
+Network Scanner (UDP Discovery)
+- Find Snapmaker devices on your local network automatically
+- Sends a UDP broadcast on port 20054 with the message "discover"
+- Snapmaker devices reply with their IP address, model name, and status
+- Available via the web interface at /discover or from the system tray menu
+- One-click copy of discovered IP addresses to the clipboard
+
 System Tray (Background Service)
 - Right-click tray icon for quick access:
    Open HTTP page in browser
@@ -122,6 +129,7 @@ System Tray (Background Service)
    Web Thickness (Browser)
    Web G-code (Browser)
    Web XYZ Laser Calibration (Browser)
+   Web Network Scanner (Browser)
    Web About (Browser)
    Exit
 - Runs in background even when main console is closed
@@ -201,6 +209,7 @@ HTTP Upload Server (OctoPrint-like API)
   /thickness   - measure material thickness via web interface
   /gcode       - web-based G-code console
   /xyzcal      - laser calibration wizard (Z-height and XY offset)
+  /discover    - network scanner to find Snapmaker devices on your LAN
   /about       - displays README content
   /mobile      - mobile-friendly page for smartphones (see MOBILE WEB PAGE section)
 
@@ -253,6 +262,14 @@ Web G-code Console (/gcode)
 - Send raw G-code commands from browser
 - Command history with click-to-reuse
 - Quick command buttons (G28, G90, G91, G54, M5)
+
+Web Network Scanner Page (/discover)
+- Find Snapmaker devices on your local network with one click
+- Uses UDP broadcast on port 20054 with probe message "discover"
+- Displays IP address, model name, and current status for each device found
+- One-click copy to clipboard for easy IP address entry
+- Access from the system tray menu or directly at http://localhost:8081/discover
+- Great for discovering your printer's IP when using DHCP
 
 Web XYZ Calibration Page (/xyzcal)
 - Interactive wizard for laser Z-height and XY offset calibration
@@ -553,7 +570,7 @@ Monitoring Features:
   [P] Pause the print
   [R] Resume a paused print
   [S] Stop the print (with confirmation and homing)
-  [O] Toggle polling – pauses live status updates (the print continues)
+  [O] Toggle polling - pauses live status updates (the print continues)
   [C] Start/Stop the RTSP camera (if configured)
   [K] Toggle auto power-off after print finishes (persistent setting)
   [B] Toggle beep notification on print completion (persistent setting)
@@ -587,6 +604,7 @@ The HTTP server (port 8081) serves several interactive web pages:
 - http://localhost:8081/thickness  - Measure material thickness
 - http://localhost:8081/gcode      - Web-based G-code console with history
 - http://localhost:8081/xyzcal     - Interactive laser calibration wizard (Z-height and XY offset)
+- http://localhost:8081/discover   - Network scanner to find Snapmaker devices on your LAN
 - http://localhost:8081/about      - README documentation in styled HTML
 - http://localhost:8081/mobile     - Mobile-friendly interface (see MOBILE WEB PAGE section below)
 
@@ -1088,6 +1106,12 @@ Web XYZ Calibration page not working:
 - Ensure the laser module is installed and the machine is connected
 - Follow the step-by-step wizard; it requires the sample G-code files to exist
   (run console Z-calibration first to generate them if missing)
+
+Web Network Scanner not finding devices:
+- Ensure your Snapmaker is powered on and connected to the same network
+- Temporarily disable your firewall for UDP port 20054
+- The scanner broadcasts to 255.255.255.255:20054 with probe "discover"
+- Check that your network allows UDP broadcasts
 
 Security warning: The web interface is not encrypted and has basic authentication.
 Do not expose it directly to the internet. If you need remote access, use a VPN.

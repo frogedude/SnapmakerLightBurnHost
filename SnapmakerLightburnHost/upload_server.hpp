@@ -81,6 +81,10 @@ void HandlePostRequest(SOCKET clientSocket, const std::string& path, const std::
 
 void ServeXYZCalibrationPage(SOCKET clientSocket);
 
+// Forward declarations for scanner endpoints
+void ServeDiscoverPage(SOCKET clientSocket);
+void ServeDiscoverAPI(SOCKET clientSocket);
+
 class FileUploadServer {
 private:
     // Original members
