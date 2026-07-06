@@ -187,6 +187,10 @@ HTTP Upload Server (OctoPrint-like API)
     Path: /
    *OK > API Key: Snapmaker (anything) > Check Start print job after uploading to upload+print or 
     uncheck to just upload    
+- Command Line Example usage:
+    curl -X POST -F "file=@model.gcode" http://localhost:8081/api/files/local
+    curl -X POST -F "file=@model.gcode" -F "print=true" http://localhost:8081/api/files/local
+
 - Serves simple status page on http://localhost:8081
 - Also serves user-friendly web pages:
   /upload      - drag & drop file upload with print option
@@ -199,10 +203,6 @@ HTTP Upload Server (OctoPrint-like API)
   /xyzcal      - laser calibration wizard (Z-height and XY offset)
   /about       - displays README content
   /mobile      - mobile-friendly page for smartphones (see MOBILE WEB PAGE section)
-
-- Command Line Example usage:
-    curl -X POST -F "file=@model.gcode" http://localhost:8081/api/files/local
-    curl -X POST -F "file=@model.gcode" -F "print=true" http://localhost:8081/api/files/local
 
 Web Upload Page (/upload)
 - Full-featured HTML page with drag & drop support
