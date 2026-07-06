@@ -594,7 +594,6 @@ Monitoring Features:
 
 WEB PAGES
 The HTTP server (port 8081) serves several interactive web pages:
-
 - http://localhost:8081/           - Simple status page with last uploaded file and monitor link
 - http://localhost:8081/upload     - Drag & drop file upload with print option
 - http://localhost:8081/monitor    - Real-time print monitor (auto-refresh)
