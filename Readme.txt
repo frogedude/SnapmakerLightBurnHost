@@ -171,6 +171,22 @@ HTTP Upload Server (OctoPrint-like API)
 - Start with: /tray or /server (minimizes console, runs in background)
 - Accepts multipart POST to /api/files/local with "file" and "print" fields
 - "print=true" starts the job, "print=false" only uploads
+- OrcaSlicer:
+- Physical Printer
+    Host Type: Octo/Klipper
+    Print Agent: Snapmaker
+    Hostname, IP or URL: localhost:8081 or 127.0.0.1:8081
+    API Key: Snapmaker (anything)
+    Test connection
+- Cura:
+   *Install OctoPrint Connection plugin from Martketplace (top right of Cura)
+    Setting > Printer > Manage Printers > Select Printer > Connect OctoPrint > Add
+    Instance Name: Snapmaker (anything)
+    IP Address or Hostname: localhost:8081 or 127.0.0.1:8081
+    Port: 8081
+    Path: /
+   *OK > API Key: Snapmaker (anything) > Check Start print job after uploading to upload+print or 
+    uncheck to just upload    
 - Serves simple status page on http://localhost:8081
 - Also serves user-friendly web pages:
   /upload      - drag & drop file upload with print option
@@ -183,22 +199,6 @@ HTTP Upload Server (OctoPrint-like API)
   /xyzcal      - laser calibration wizard (Z-height and XY offset)
   /about       - displays README content
   /mobile      - mobile-friendly page for smartphones (see MOBILE WEB PAGE section)
-- Can be used with OrcaSlicer (custom G-code upload script)
-- OrcaSlicer:
-- Physical Printer
-    Host Type: Octo/Klipper
-    Print Agent: Snapmaker
-    Hostname, IP or URL: localhost:8081 or 127.0.0.1:8081
-    Test connection
-- Cura:
-   *Install OctoPrint Connection plugin from Martketplace (top right of Cura)
-    Setting > Printer > Manage Printers > Select Printer > Connect OctoPrint > Add
-    Instance Name: Snapmaker (anything)
-    IP Address or Hostname: localhost:8081 or 127.0.0.1:8081
-    Port: 8081
-    Path: /
-   *OK > API Key: Snapmaker (anything) > Check Start print job after uploading to upload+print or 
-    uncheck to just upload    
 
 - Command Line Example usage:
     curl -X POST -F "file=@model.gcode" http://localhost:8081/api/files/local
